@@ -189,6 +189,8 @@ public final class AgentOptions {
 	 */
 	public static final String JMX = "jmx";
 
+	public static final String JMX_UNREGISTER = "jmxunregister";
+
 	private static final Collection<String> VALID_OPTIONS = Arrays.asList(
 			DESTFILE, APPEND, INCLUDES, EXCLUDES, EXCLCLASSLOADER,
 			INCLBOOTSTRAPCLASSES, INCLNOLOCATIONCLASSES, SESSIONID, DUMPONEXIT,
@@ -545,6 +547,10 @@ public final class AgentOptions {
 	 */
 	public boolean getJmx() {
 		return getOption(JMX, false);
+	}
+
+	public boolean getJmxUnregister() {
+		return getOption(JMX_UNREGISTER, true);
 	}
 
 	/**

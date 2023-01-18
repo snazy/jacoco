@@ -68,4 +68,7 @@ public interface IAgent {
 	 */
 	void dump(boolean reset) throws IOException;
 
+	boolean isShutdown();
+
+	boolean waitForShutdown(long timeoutInMillis);
 }

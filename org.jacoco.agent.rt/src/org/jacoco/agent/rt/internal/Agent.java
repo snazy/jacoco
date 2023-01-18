@@ -88,6 +88,8 @@ public class Agent implements IAgent {
 	private IAgentOutput output;
 
 	private Callable<Void> jmxRegistration;
+	private volatile boolean shutdown;
+	private final Object shutdownSync;
 
 	/**
 	 * Creates a new agent with the given agent options.
@@ -101,6 +103,7 @@ public class Agent implements IAgent {
 		this.options = options;
 		this.logger = logger;
 		this.data = new RuntimeData();
+		this.shutdownSync = new Object();
 	}
 
 	/**
@@ -145,8 +148,12 @@ public class Agent implements IAgent {
 				output.writeExecutionData(false);
 			}
 			output.shutdown();
-			if (jmxRegistration != null) {
+			if (jmxRegistration != null && options.getJmxUnregister()) {
 				jmxRegistration.call();
+			}
+			synchronized (shutdownSync) {
+				shutdown = true;
+				shutdownSync.notifyAll();
 			}
 		} catch (final Exception e) {
 			logger.logExeption(e);
@@ -220,4 +227,26 @@ public class Agent implements IAgent {
 		output.writeExecutionData(reset);
 	}
 
+	public boolean isShutdown() {
+		synchronized (shutdownSync) {
+			return shutdown;
+		}
+	}
+
+	@Override
+	public boolean waitForShutdown(long timeoutInMillis) {
+		synchronized (shutdownSync) {
+			if (shutdown) {
+				return true;
+			}
+			if (timeoutInMillis > 0) {
+				try {
+					shutdownSync.wait(timeoutInMillis);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			return shutdown;
+		}
+	}
 }
